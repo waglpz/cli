@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Waglpz\Webapp\UI\Cli;
+namespace Waglpz\Cli\UI\Cli;
 
 use Aura\Sql\ExtendedPdoInterface;
 
@@ -10,15 +10,13 @@ final class DbMigrations
 {
     private string $argument;
     private string $message;
-    private ExtendedPdoInterface $pdo;
     /** @var array<string> */
     private array $usage;
     private string $migrationsDir;
 
     /** @param array<mixed> $options */
-    public function __construct(ExtendedPdoInterface $pdo, array $options)
+    public function __construct(private readonly ExtendedPdoInterface $pdo, array $options)
     {
-        $this->pdo = $pdo;
         \assert(isset($options['usage']));
         /** @phpstan-var array<string> $usage */
         $usage       = $options['usage'];
@@ -99,8 +97,8 @@ final class DbMigrations
 
         $newMigrations = \array_filter(
             $allMigrations,
-            static fn ($migrationTime) => ! \in_array('' . $migrationTime, $oldMigrations, true),
-            \ARRAY_FILTER_USE_KEY
+            static fn ($migrationTime) => ! \in_array($migrationTime, $oldMigrations, true),
+            \ARRAY_FILTER_USE_KEY,
         );
 
         \ksort($newMigrations);
@@ -117,9 +115,7 @@ final class DbMigrations
         }
     }
 
-    /**
-     * @throws \Throwable
-     */
+    /** @throws \Throwable */
     protected function migrate(): void
     {
         $affectedRows    = 0;
@@ -143,7 +139,10 @@ final class DbMigrations
                 $insertMigration += $this->pdo->exec($stmt);
             }
 
-            $this->pdo->commit();
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
+
             $this->message  = 'Result migrations:' . \PHP_EOL;
             $this->message .= '  Affected rows #' . $affectedRows . \PHP_EOL;
             $this->message .= '  Applied migrations #' . $insertMigration . \PHP_EOL;

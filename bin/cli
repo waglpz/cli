@@ -5,9 +5,9 @@ declare(strict_types=1);
 
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Dotenv\Dotenv;
-use Waglpz\Webapp\CliExceptionHandler;
+use Waglpz\Cli\CliExceptionHandler;
 
-use function Waglpz\Webapp\cliExecutorName;
+use function Waglpz\Cli\cliExecutorName;
 
 if (\is_file(__DIR__.'/../vendor/autoload.php')) {
     $dir = __DIR__;
@@ -95,7 +95,7 @@ $append         = $quite ? '' : \PHP_EOL.\PHP_EOL;
 
 $commandExecutorClass = $config['commands'][$command]['executor'];
 
-$container = \Waglpz\Webapp\container();
+$container = \Waglpz\DiContainer\container();
 $logger = $container->get('$DefaultLogger');
 \assert($logger instanceof LoggerInterface);
 
