@@ -2,17 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Waglpz\Webapp\UI\Cli;
+namespace Waglpz\Cli\UI\Cli;
 
 use Aura\Sql\ExtendedPdoInterface;
 
 final class DbReset
 {
-    private ExtendedPdoInterface $pdo;
-
-    public function __construct(ExtendedPdoInterface $pdo)
+    public function __construct(private readonly ExtendedPdoInterface $pdo)
     {
-        $this->pdo = $pdo;
     }
 
     public function __invoke(): void
@@ -42,7 +39,10 @@ final class DbReset
             $this->pdo->fetchAffected('TRUNCATE __migrations');
             $this->pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
 
-            $this->pdo->commit();
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
+
             echo 'Reset migrations.' . \PHP_EOL;
             echo 'Database reset was successfully done.';
             echo \PHP_EOL;

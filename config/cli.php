@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Waglpz\Webapp\UI\Cli\DbMigrations;
-use Waglpz\Webapp\UI\Cli\DbReset;
+use Waglpz\Cli\UI\Cli\DbMigrations;
+use Waglpz\Cli\UI\Cli\DbReset;
 
-use function Waglpz\Webapp\cliExecutorName;
+use function Waglpz\Cli\cliExecutorName;
 
 \Locale::setDefault('de_DE.utf8');
 

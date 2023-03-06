@@ -2,16 +2,21 @@
 
 declare(strict_types=1);
 
-namespace Waglpz\Webapp\Tests\UI\Cli;
+namespace Waglpz\Cli\Tests\UI\Cli;
 
 use Aura\Sql\ExtendedPdoInterface;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
-use Waglpz\Webapp\UI\Cli\CliError;
-use Waglpz\Webapp\UI\Cli\DbMigrations;
+use Waglpz\Cli\UI\Cli\CliError;
+use Waglpz\Cli\UI\Cli\DbMigrations;
 
 class DbMigrationsTest extends TestCase
 {
-    /** @test */
+    /**
+     * @throws Exception
+     *
+     * @test
+     */
     public function noMigrationsForExecution(): void
     {
         $dirName = '/tmp/' . \uniqid();
@@ -36,7 +41,11 @@ class DbMigrationsTest extends TestCase
         $command();
     }
 
-    /** @test */
+    /**
+     * @throws Exception
+     *
+     * @test
+     */
     public function check(): void
     {
         $options    = [
@@ -50,7 +59,11 @@ class DbMigrationsTest extends TestCase
         (new DbMigrations($connection, $options))();
     }
 
-    /** @test */
+    /**
+     * @throws Exception
+     *
+     * @test
+     */
     public function executeMigrations(): void
     {
         $options = [
@@ -69,6 +82,7 @@ class DbMigrationsTest extends TestCase
         $connection->expects(self::once())->method('exec')
                    ->with('INSERT INTO __migrations (migration) VALUES (1605646639)')
                    ->willReturn(1);
+        $connection->expects(self::once())->method('inTransaction')->willReturn(true);
         $connection->expects(self::once())->method('commit');
         $connection->expects(self::never())->method('rollBack');
 
@@ -82,11 +96,15 @@ class DbMigrationsTest extends TestCase
   Affected rows #1
   Applied migrations #1
 ',
-            $output
+            $output,
         );
     }
 
-    /** @test */
+    /**
+     * @throws Exception
+     *
+     * @test
+     */
     public function rollBackMigrations(): void
     {
         $options = [
@@ -116,7 +134,11 @@ class DbMigrationsTest extends TestCase
         $command();
     }
 
-    /** @test */
+    /**
+     * @throws Exception
+     *
+     * @test
+     */
     public function generateNewMigration(): void
     {
         $options    = [
@@ -131,7 +153,11 @@ class DbMigrationsTest extends TestCase
         self::assertFileExists('/tmp/migration-' . \time() . '-down.sql');
     }
 
-    /** @test */
+    /**
+     * @throws Exception
+     *
+     * @test
+     */
     public function nochNichtImplementierteMethode(): void
     {
         $options    = [
@@ -147,7 +173,11 @@ class DbMigrationsTest extends TestCase
         (new DbMigrations($connection, $options))();
     }
 
-    /** @test */
+    /**
+     * @throws Exception
+     *
+     * @test
+     */
     public function usageWirdAnzeigt(): void
     {
         $options    = [
