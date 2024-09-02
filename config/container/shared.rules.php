@@ -42,7 +42,7 @@ return [
             [
                 'create',
                 [
-                    'default',
+                    $_SERVER['APP_NAME'],
                     /** @phpstan-ignore-next-line */
                     config('logger')['default'],
                 ],
