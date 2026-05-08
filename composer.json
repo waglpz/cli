@@ -2,7 +2,7 @@
   "name": "waglpz/cli",
   "description": "Web application component",
   "license": "MIT",
-  "version": "2.2.0",
+  "version": "2.2.2",
   "type": "library",
   "minimum-stability": "dev",
   "prefer-stable": true,
