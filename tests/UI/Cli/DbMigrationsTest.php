@@ -73,16 +73,18 @@ class DbMigrationsTest extends TestCase
 
         $migrations = [1605646638];
 
+        $pdoStatement = $this->createMock(\PDOStatement::class);
+        $pdoStatement->expects(self::once())->method('execute')->with([1605646639]); // see in stub;
         $connection = $this->createMock(ExtendedPdoInterface::class);
         $connection->expects(self::once())->method('beginTransaction');
+        $connection->expects(self::once())->method('inTransaction')->willReturn(true);
         $connection->expects(self::once())->method('fetchCol')
                    ->with('SELECT migration FROM __migrations ORDER BY migration')
                    ->willReturn($migrations);
         $connection->expects(self::once())->method('fetchAffected')->willReturn(1);
-        $connection->expects(self::once())->method('exec')
-                   ->with('INSERT INTO __migrations (migration) VALUES (1605646639)')
-                   ->willReturn(1);
-        $connection->expects(self::once())->method('inTransaction')->willReturn(true);
+        $connection->expects(self::once())->method('prepare')
+                   ->with('INSERT INTO __migrations (migration) VALUES (?)')
+                   ->willReturn($pdoStatement);
         $connection->expects(self::once())->method('commit');
         $connection->expects(self::never())->method('rollBack');
 
@@ -116,13 +118,14 @@ class DbMigrationsTest extends TestCase
 
         $connection = $this->createMock(ExtendedPdoInterface::class);
         $connection->expects(self::once())->method('beginTransaction');
+        $connection->expects(self::once())->method('inTransaction')->willReturn(true);
         $connection->expects(self::once())->method('fetchCol')
                    ->with('SELECT migration FROM __migrations ORDER BY migration')
                    ->willReturn($migrations);
         $connection->expects(self::once())->method('fetchAffected')->willReturn(1);
-        $connection->expects(self::once())->method('exec')
-                   ->with('INSERT INTO __migrations (migration) VALUES (1605646639)')
-                   ->willThrowException(new \Exception('Test Exception message'));
+        $connection->expects(self::once())->method('prepare')
+                   ->with('INSERT INTO __migrations (migration) VALUES (?)')
+                   ->willReturn(false);
         $connection->expects(self::never())->method('commit');
         $connection->expects(self::once())->method('rollBack');
 
@@ -130,7 +133,7 @@ class DbMigrationsTest extends TestCase
         $_SERVER['argv'][2] = 'migrate';
 
         $this->expectException(\Throwable::class);
-        $this->expectExceptionMessage('Test Exception message');
+        $this->expectExceptionMessage('PDO::prepare() failed.');
         $command();
     }
 

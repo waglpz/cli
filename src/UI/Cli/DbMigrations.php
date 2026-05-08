@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Waglpz\Cli\UI\Cli;
 
 use Aura\Sql\ExtendedPdoInterface;
+use PDOStatement;
 
 final class DbMigrations
 {
@@ -122,6 +123,7 @@ final class DbMigrations
         $insertMigration = 0;
 
         $newMigrations = $this->newMigrations();
+
         if (\count($newMigrations) < 1) {
             $message = 'Nothing to do, no new migrations to execute.';
 
@@ -130,13 +132,22 @@ final class DbMigrations
             return;
         }
 
-        $this->pdo->beginTransaction();
+        $transactionStarted = false;
 
         try {
+            $this->pdo->beginTransaction();
+            $stmt      = 'INSERT INTO __migrations (migration) VALUES (?)';
+            $statement = $this->pdo->prepare($stmt);
+
             foreach ($newMigrations as $migrationTime => $migration) {
-                $affectedRows    += $this->pdo->fetchAffected($migration['up']);
-                $stmt             = 'INSERT INTO __migrations (migration) VALUES (' . $migrationTime . ')';
-                $insertMigration += $this->pdo->exec($stmt);
+                $affectedRows += $this->pdo->fetchAffected($migration['up']);
+
+                if (! $statement instanceof PDOStatement) {
+                    throw new \RuntimeException('PDO::prepare() failed.');
+                }
+
+                $statement->execute([$migrationTime]);
+                ++$insertMigration;
             }
 
             if ($this->pdo->inTransaction()) {
@@ -147,7 +158,9 @@ final class DbMigrations
             $this->message .= '  Affected rows #' . $affectedRows . \PHP_EOL;
             $this->message .= '  Applied migrations #' . $insertMigration . \PHP_EOL;
         } catch (\Throwable $exception) {
-            $this->pdo->rollBack();
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
 
             throw $exception;
         }
